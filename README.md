@@ -1,319 +1,193 @@
-# pypandoc
+# RL Swarm
 
-[![Build Status](https://github.com/JessicaTegner/pypandoc/actions/workflows/ci.yaml/badge.svg)](https://github.com/JessicaTegner/pypandoc/actions/workflows/ci.yaml)
-[![GitHub Releases](https://img.shields.io/github/tag/JessicaTegner/pypandoc.svg)](https://github.com/JessicaTegner/pypandoc/releases)
-[![Pypandoc PyPI Version](https://img.shields.io/pypi/v/pypandoc?label=pypandoc+pypi+version)](https://pypi.org/project/pypandoc/)
-[![Pypandoc Binary PyPI Version](https://img.shields.io/pypi/v/pypandoc_binary?label=pypandoc+binary+pypi+version)](https://pypi.org/project/pypandoc_binary/)
-![PyPandoc PyPi Downloads](https://img.shields.io/pypi/dm/pypandoc)
-![PyPandoc Binary PyPI Downloads](https://img.shields.io/pypi/dm/pypandoc_binary)
-[![conda version](https://anaconda.org/conda-forge/pypandoc/badges/version.svg)](https://anaconda.org/conda-forge/pypandoc/)
-[![Development Status](https://img.shields.io/pypi/status/pypandoc.svg)](https://pypi.python.org/pypi/pypandoc/)
-[![PyPandoc Python version](https://img.shields.io/pypi/pyversions/pypandoc.svg)](https://pypi.python.org/pypi/pypandoc/)
-[![PyPandoc Binary Python version](https://img.shields.io/pypi/pyversions/pypandoc_binary.svg)](https://pypi.python.org/pypi/pypandoc_binary/)
-![License](https://img.shields.io/pypi/l/pypandoc.svg)
+RL Swarm is a peer-to-peer system for reinforcement learning. It allows you to train models collaboratively with others in the swarm, leveraging their collective intelligence. It is open source and permissionless, meaning you can run it on a consumer laptop at home or on a powerful GPU in the cloud. You can also connect your model to the Gensyn Testnet to receive an on-chain identity that tracks your progress over time.
 
-Pypandoc provides a thin wrapper for [pandoc](https://pandoc.org), a universal
-document converter.
+Currently, we are running the [reasoning-gym](https://github.com/open-thought/reasoning-gym/tree/main) swarm on the Testnet. This swarm is designed to train models to solve a diverse set of reasoning tasks using the reasoning-gym dataset. The current list of default models includes:
 
-## Installation
+Models:
+   - Gensyn/Qwen2.5-0.5B-Instruct
+   - Qwen/Qwen3-0.6B
+   - nvidia/AceInstruct-1.5B
+   - dnotitia/Smoothie-Qwen3-1.7B
+   - Gensyn/Qwen2.5-1.5B-Instruct
 
-Pypandoc uses pandoc, so it needs an available installation of pandoc. Pypandoc provides 2 packages, "pypandoc" and "pypandoc_binary", with the second one including pandoc out of the box.
-The 2 packages are identical, with the only difference being that one includes pandoc, while the other don't.
+This iteration of rl-swarm is powered by the [GenRL](https://github.com/gensyn-ai/genrl) library.  It is a fully composable framework for decentralized reinforcement learning which enables users to create and customize their own swarms for reinforcement learning with multi-agent multi-stage environments.
 
-If pandoc is already installed (i.e. pandoc is in the `PATH`), pypandoc uses the version with the
-higher version number, and if both are the same, the already installed version. See [Specifying the location of pandoc binaries](#specifying-the-location-of-pandoc-binaries) for more.
+## Requirements
 
-To use pandoc filters, you must have the relevant filters installed on your machine.
+Your hardware requirements will vary depending on a number of factors including model size and the accelerator platform you use.  Users running large NVIDIA GPU will be assigned a model from the large model pool, while users running less powerful hardware will be assigned a model from the small model pool. This design decision is intended to allow users to advance at a similar rate regardless of the hardware they use, maximizing their utility to the swarm.      
 
-### Installing via pip
+**Supported Hardware**
 
-If you [want to install pandoc yourself](#Installing-pandoc) or are on a unsupported platform, you'll need to install "pypandoc" and  [install pandoc manually](#Installing-pandoc)
-
-```
-pip install pypandoc
-```
+- arm64 or x86 CPU with minimum 32gb ram (note that if you run other applications during training it might crash training).
 
 
-If you want pandoc included out of the box, you can utilize our pypandoc_binary package, which are identical to the "pypandoc" package, but with pandoc included.
+OR
 
-```
-pip install pypandoc_binary
-```
+- CUDA devices (officially supported):
+    - RTX 3090
+    - RTX 4090
+    - RTX 5090
+    - A100
+    - H100
 
-Prebuilt [wheels for Windows and Mac OS X](https://pypi.python.org/pypi/pypandoc_binary/)
 
-If you use Linux and have [your own wheelhouse](https://wheel.readthedocs.org/en/latest/#usage),
-you can build a wheel which include pandoc with
-`python setup_binary.py download_pandoc; python setup.py bdist_wheel`. Be aware that this works only
-on 64bit intel systems, as we only download it from the
-[official releases](https://github.com/jgm/pandoc/releases).
+With either configuration, you will need Python >=3.10 (for Mac, you will likely need to upgrade).
 
-### Installing via conda
+## ⚠️ Please read before continuing ⚠️
 
-Pypandoc is included in [conda-forge](https://conda-forge.github.io/). The conda packages will
-also install the pandoc package, so pandoc is available in the installation.
+This software is **experimental** and provided as-is for users who are interested in using (or helping to develop) an early version of the Gensyn Protocol for training models.
 
-Install via `conda install -c conda-forge pypandoc`.
+If you care about on-chain participation, you **must** read the [Identity Management](#identity-management) section below.
 
-You can also add the channel to your conda config via
-`conda config --add channels conda-forge`. This makes it possible to
-use `conda install pypandoc` directly and also lets you update via `conda update pypandoc`.
+If you encounter issues, please first check [Troubleshooting](#troubleshooting). If you cannot find a solution there, please check if there is an open (or closed) [Issue](../../issues). If there is no relevant issue, please file one and include 1) all relevant [logs](#troubleshooting), 2) information about your device (e.g. which GPU, if relevant), and 3) your operating system information.
 
-### Installing pandoc
+## Instructions
 
-If you don't already have pandoc on your system, or have installed the pypandoc_binary package, which includes pandoc, you need to install pandoc by yourself.
+### Run the Swarm
 
-#### Installing pandoc via pypandoc
+The easiest way to run RL Swarm is using Docker. This ensures a consistent setup across all operating systems with minimal dependencies.
 
-Installing via pypandoc is possible on Windows, Mac OS X or Linux (Intel-based, 64-bit):
+#### 1. Clone this repo
 
-```python
-pip install pypandoc
-from pypandoc.pandoc_download import download_pandoc
-# see the documentation how to customize the installation path
-# but be aware that you then need to include it in the `PATH`
-download_pandoc()
+```sh
+git clone https://github.com/gensyn-ai/rl-swarm
 ```
 
-The default install location is included in the search path for pandoc, so you
-don't need to add it to the `PATH`.
+#### 2. Install Docker
 
-By default, the latest pandoc version is installed. If you want to specify your own version, say 1.19.1, use `download_pandoc(version='1.19.1')` instead.
+Make sure you have Docker installed and the Docker daemon is running on your machine. To do that, follow [these instructions](https://docs.docker.com/get-started/get-docker/) according to your OS. Ensure you allot sufficient memory to the Docker containers. For example if using Docker Desktop, this can be done by going to Docker Desktop Settings > Resources > Advanced > Memory Limit, and increasing it to the maximum possible value.
 
-#### Installing pandoc manually
+#### 3. Start the Swarm
 
-Installing manually via the system mechanism is also possible. Such installation mechanism
-make pandoc available on many more platforms:
+Run the following commands from the root of the repository.
 
-- Ubuntu/Debian: `sudo apt-get install pandoc`
-- Fedora/Red Hat: `sudo yum install pandoc`
-- Arch: `sudo pacman -S pandoc`
-- Mac OS X with Homebrew: `brew install pandoc pandoc-citeproc Caskroom/cask/mactex`
-- Machine with Haskell: `cabal-install pandoc`
-- Windows: There is an installer available
-  [here](https://pandoc.org/installing.html)
-- [FreeBSD with pkg:](https://www.freshports.org/textproc/hs-pandoc/) `pkg install hs-pandoc`
-- Or see [Pandoc - Installing pandoc](https://pandoc.org/installing.html)
+##### CPU support
 
-Be aware that not all install mechanisms put pandoc in the `PATH`, so you either
-have to change the `PATH` yourself or set the full `PATH` to pandoc in
-`PYPANDOC_PANDOC`. See the next section for more information.
-
-### Specifying the location of pandoc binaries
-
-You can point to a specific pandoc version by setting the environment variable
-`PYPANDOC_PANDOC` to the full `PATH` to the pandoc binary
-(`PYPANDOC_PANDOC=/home/x/whatever/pandoc` or `PYPANDOC_PANDOC=c:\pandoc\pandoc.exe`).
-If this environment variable is set, this is the only place where pandoc is searched for.
-
-In certain cases, e.g. pandoc is installed but a web server with its own user
-cannot find the binaries, it is useful to specify the location at runtime:
-
-```python
-import os
-os.environ.setdefault('PYPANDOC_PANDOC', '/home/x/whatever/pandoc')
+ If you’re using a Mac or if your machine has CPU-only support:
+```sh
+docker-compose run --rm --build -Pit swarm-cpu
 ```
 
-## Usage
+##### GPU support
 
-There are two basic ways to use pypandoc: with input files or with input
-strings.
-
-
-```python
-import pypandoc
-
-# With an input file: it will infer the input format from the filename
-output = pypandoc.convert_file('somefile.md', 'rst')
-
-# ...but you can overwrite the format via the `format` argument:
-output = pypandoc.convert_file('somefile.txt', 'rst', format='md')
-
-# alternatively you could just pass some string. In this case you need to
-# define the input format:
-output = pypandoc.convert_text('# some title', 'rst', format='md')
-# output == 'some title\r\n==========\r\n\r\n'
+If you're using a machine with an officially supported GPU:
+```sh
+docker-compose run --rm --build -Pit swarm-gpu
 ```
 
-`convert_text` expects this string to be unicode or utf-8 encoded bytes. `convert_*` will always
-return a unicode string.
+##### Docker compose issue
 
-It's also possible to directly let pandoc write the output to a file. This is the only way to
-convert to some output formats (e.g. odt, docx, epub, epub3, pdf). In that case `convert_*()` will
-return an empty string.
+If `docker-compose` does not work when running the above commands, please try `docker compose` (no hyphen) instead. I.e. ` docker compose run --rm --build -Pit swarm-gpu`. This issue sometimes occurs on users running Ubuntu.
 
-```python
-import pypandoc
+### Experimental (advanced) mode
 
-output = pypandoc.convert_file('somefile.md', 'docx', outputfile="somefile.docx")
-assert output == ""
-```
+If you want to experiment with the [GenRL](https://github.com/gensyn-ai/genrl) library or the[configurable parameters](https://github.com/gensyn-ai/rl-swarm/blob/main/rgym_exp/config/rg-swarm.yaml ), we recommend you run RL Swarm via shell script:
+```sh
+python3 -m venv .venv
+source .venv/bin/activate
+./run_rl_swarm.sh
+```  
+To learn more about experimental mode, check out our [getting started guide](https://github.com/gensyn-ai/genrl/blob/main/getting_started.ipynb).
 
+### Login
 
-It's also possible to specify multiple input files to pandoc, either as absolute paths, relative paths or file patterns.
+1. A browser window will pop open (you'll need to manually navigate to http://localhost:3000/ if you're on a VM).
+2. Click 'login'.
+3. Login with your preferred method.
 
-```python
-import pypandoc
+### Huggingface
 
-# convert all markdown files in a chapters/ subdirectory.
-pypandoc.convert_file('chapters/*.md', 'docx', outputfile="somefile.docx")
+If you would like to upload your model to Hugging Face, enter your Hugging Face access token when prompted. You can generate one from your Hugging Face account, under [Access Tokens](https://huggingface.co/docs/hub/en/security-tokens).
 
-# convert all markdown files in the book1 and book2 directories.
-pypandoc.convert_file(['book1/*.md', 'book2/*.md'], 'docx', outputfile="somefile.docx")
+### Initial peering and training
 
-# convert the front from another drive, and all markdown files in the chapter directory.
-pypandoc.convert_file(['D:/book_front.md', 'book2/*.md'], 'docx', outputfile="somefile.docx")
-```
+From this stage onward your device will begin training. You should see your peer register and vote on-chain [here](https://gensyn-testnet.explorer.alchemy.com/address/0xFaD7C5e93f28257429569B854151A1B8DCD404c2?tab=logs).
 
+You can also track your training progress in real time:
+- On The RL-Swarm Dashboard: [dashboard.gensyn.ai](https://dashboard.gensyn.ai)
 
-pathlib is also supported.
+## Identity management
 
-```python
-import pypandoc
-from pathlib import Path
+### Introduction
 
-# single file
-input = Path('somefile.md')
-output = input.with_suffix('.docx')
-pypandoc.convert_file(input, 'docx', outputfile=output)
+On-chain identity is managed via an Alchemy modal sign-in screen. You need to supply an email address or login via a supported method (e.g. Google). This creates an EOA public/private key (which are stored by Alchemy). You will also receive local session keys in the `userApiKey`. Note that these aren't your EOA public/private keys. 
 
-# convert all markdown files in a chapters/ subdirectory.
-pypandoc.convert_file(Path('chapters').glob('*.md'), 'docx', outputfile="somefile.docx")
+During the initial set-up process, you will also create a `swarm.pem` file which maintains the identity of your peer. This is then registered on chain using the EOA wallet hosted in Alchemy, triggered using your local api keys. This links the `swarm.pem` to the `email address` (and corresponding EOA in Alchemy).
 
-# convert all markdown files in the book1 and book2 directories.
-pypandoc.convert_file([*Path('book1').glob('*.md'), *Path('book2').glob('*.md')], 'docx', outputfile="somefile.docx")
-# pathlib globs must be unpacked if they are inside lists.
-```
+**If you want to link multiple nodes to a single EOA**, simply sign up each node using the same email address. You will get a new peer ID for each node, however they will all be linked to the same EOA that your email is linked to.
 
-In addition to `format`, it is possible to pass `extra_args`.
-That makes it possible to access various pandoc options easily.
+**Please note**: if you are using a fork of this repo, or a service organised by someone else (e.g. a 'one click deployment' provider) the identity management flow below is not guaranteed.
 
-```python
-output = pypandoc.convert_text(
-    '<h1>Primary Heading</h1>',
-    'md', format='html',
-    extra_args=['--atx-headers'])
-# output == '# Primary Heading\r\n'
-output = pypandoc.convert_text(
-    '# Primary Heading',
-    'html', format='md',
-    extra_args=['--base-header-level=2'])
-# output == '<h2 id="primary-heading">Primary Heading</h2>\r\n'
-```
+### What this means
+In the following two scenarios, everything will work (i.e. you will have an on-chain identity linked with your RL Swarm peer training):
 
-pypandoc now supports easy addition of
-[pandoc filters](https://pandoc.org/scripting.html).
+- The very first time you run the node from scratch with a new email address. The smart account will be created fresh and linked with the swarm.pem that is also fresh.
+- If you run it again with a `swarm.pem` AND login the original `email address` used with that `swarm.pem`. Note: this will throw an error into the log on registration but will still be able to sign transactions.
 
-```python
-filters = ['pandoc-citeproc']
-pdoc_args = ['--mathjax',
-             '--smart']
-output = pypandoc.convert_file(filename,
-                               to='html5',
-                               format='md',
-                               extra_args=pdoc_args,
-                               filters=filters)
-```
+In the following two scenarios, it will not work (i.e. you won't have an on-chain identity linked with your RL Swarm peer training):
 
-Please pass any filters in as a list and not as a string.
+- If you keep your `swarm.pem` and try to link it to an `email address` distinct from the one with which it was first registered.
 
-Please refer to `pandoc -h` and the
-[official documentation](https://pandoc.org/MANUAL.html) for further details.
+Therefore, you should do these actions in the following scenarios
 
-## Dealing with Formatting Arguments
+- **Signed up with `email address`, generated `swarm.pem`, BUT lost `swarm.pem`** OR **You want to run multiple nodes at once**: run from scratch with the same email address and generate a new `swarm.pem`. 
+- **Signed up with `email address`, generated `swarm.pem`, kept `swarm.pem`** -> you can re-run a single node using this pair if you've still got them both.
 
-Pandoc supports custom formatting though `-V` parameter. In order to use it through
-pypandoc, use code such as this:
+## Troubleshooting
 
-```python
-output = pypandoc.convert_file('demo.md', 'pdf', outputfile='demo.pdf',
-  extra_args=['-V', 'geometry:margin=1.5cm'])
-```
+- **How do I find my logs?** You can find them inside the `/logs` directory:
+    - `yarn.log`: This file contains logs for the modal login server.
+    - `swarm.log`: This is the main log file for the RL Swarm application.
+    - `wandb/`: This directory contains various logs related to your training runs, including a `debug.log` file. These can be updated to Weights & Biases (only available if you log_with wandb).
 
-> Note: it's important to separate `-V` and its argument within a list like that or else
-it won't work. This gotcha has to do with the way
-[`subprocess.Popen`](https://docs.python.org/2/library/subprocess.html#subprocess.Popen) works.
+- **My peer 'skipped a round'**: this occurs when your device isn't fast enough to keep up with the pace of the swarm. For example, if you start training at round 100 and by the time you finish training the rest of the swarm reaches round 102, you will skip round 101 and go straight to 102. This is because your peer is more valuable if it is participating in the active round.
+- **My model doesn't seem to be training?**
 
-## Logging Messages
+    - If you're using a consumer device (e.g. a MacBook), it is likely just running slowly - check back in 20 minutes.
 
-Pypandoc logs messages using the [Python logging library](https://docs.python.org/3/library/logging.html).
-By default, it will send messages to the console, including any messages 
-generated by Pandoc. If desired, this behaviour can be changed by adding
-[handlers](https://docs.python.org/3/library/logging.html#handler-objects) to 
-the pypandoc logger **before calling any functions**. For example, to mute all 
-logging add a [null handler](https://docs.python.org/3/library/logging.handlers.html#nullhandler):
+- **Logging in with a new account after previous login?**
+    
+    - Make sure you click 'Logout' on the login screen before you leave your previous session
+    - Make sure you delete `swarm.pem` from the root directory (try `sudo rm swarm.pem`). If you don't do this, and you previously registered with the peer-id stored in this file, it will disrupt the training process.
 
-```python
-import logging
-logging.getLogger('pypandoc').addHandler(logging.NullHandler())
-```
+- **Issues with the Login screen**
 
-## Getting Pandoc Version
+    - **Upgrade viem**: some users report issues with the `viem` package. There are two fixes:
+        - in the `modal-login/package.json` update: `"viem": "2.25.0"`
+        - in the terminal `cd /root/rl-swarm/modal-login/ && yarn upgrade && yarn add next@latest && yarn add viem@latest`
 
-As it can be useful sometimes to check what pandoc version is available at your system or which
-particular pandoc binary is used by pypandoc. For that, pypandoc provides the following
-utility functions. Example:
+- **I'm getting lots of warnings**
+    - This is expected behaviour and usually the output of the package managers or other dependencies. The most common is the below Protobuf warning - which can be ignored
+        ```
+        WARNING: The candidate selected for download or install is a yanked version: 'protobuf' candidate...
+        ```
 
-```
-print(pypandoc.get_pandoc_version())
-print(pypandoc.get_pandoc_path())
-print(pypandoc.get_pandoc_formats())
-```
+- **Issues on VMs/VPSs?**
 
-## Related
+    - **How do I access the login screen if I'm running in a VM?**: port forwarding. Add this SSH flag: `-L 3000:localhost:3000` when connecting to your VM. E.g. `gcloud compute ssh --zone "us-central1-a" [your-vm] --project [your-project] -- -L 3000:localhost:3000`. Note, some VPSs may not work with `rl-swarm`. Check the Gensyn [discord](https://discord.gg/AdnyWNzXh5) for up-to-date information on this.
+    
+    - **Disconnection/general issues**: If you are tunneling to a VM and suffer a broken pipe, you will likely encounter OOM or unexpected behaviour the first time you relaunch the script. If you `control + c` and kill the script it should spin down all background processes. Restart the script and everything should work normally.
 
-* [pydocverter](https://github.com/msabramo/pydocverter) is a client for a service called
-[Docverter](https://www.docverter.com), which offers pandoc as a service (plus some extra goodies).
-* See [pyandoc](https://pypi.python.org/pypi/pyandoc/) for an alternative implementation of a pandoc
-wrapper from Kenneth Reitz. This one hasn't been active in a while though.
-* See [panflute](https://github.com/sergiocorreia/panflute) which provides `convert_text` similar to pypandoc's. Its focus is on writing and running pandoc filters though.
+- **Issues with npm/general installation?**
 
-## Contributing
+    - Try  `npm install -g node@latest`
 
-Contributions are welcome. When opening a PR, please keep the following guidelines in mind:
+- **OOM errors on MacBook?**
+    - Try this (experimental) fix to increase memory:
+        ```
+        export PYTORCH_MPS_HIGH_WATERMARK_RATIO=0.0
+        ```
+- **I have a Windows machine, can I still train a model on the swarm?**: Yes - but this is not very well tested and may require you to do some debugging to get it set up properly. Install WSL and Linux on your Windows machine using the following instructions: https://learn.microsoft.com/en-us/windows/wsl/install
 
-1. Before implementing, please open an issue for discussion.
-2. Make sure you have tests for the new logic.
-3. Make sure your code passes `flake8 pypandoc/*.py tests.py`
-4. Add yourself to contributors at `README.md` unless you are already there. In that case tweak your contributions.
+- **I want to move my to a different machine and/or restart with a fresh build of the repo, but I want my animal name/peer id to persist.**: To achieve this simply backup the `swarm.pem` file on your current machine and then put it in the corresponding location on your new machine/build of the repo.
 
-Note that for citeproc tests to pass you'll need to have [pandoc-citeproc](https://github.com/jgm/pandoc-citeproc) installed. If you installed a prebuilt wheel or conda package, it is already included.
+- **I have multiple GPUs on one machine, can I run multiple peers?**: Yes - but you'll need to manually change things. You'll need to isolate each GPU, install this repo for each GPU, and expose each peer under a different port to pass the modal onboard.
 
-## Contributors
+- **My round/stage is behind the smart contract/other peers?**: This is expected behaviour given the different speeds of machines in the network. Once your machine completes it's current round, it will move to the the current round.
 
-* [Jessica Tegner](https://github.com/JessicaTegner) - New maintainer as of 1. Juli 2021
-* [Valentin Haenel](https://github.com/esc) - String conversion fix
-* [Daniel Sanchez](https://github.com/ErunamoJAZZ) - Automatic parsing of input/output formats
-* [Thomas G.](https://github.com/coldfix) - Python 3 support
-* [Ben Jao Ming](https://github.com/benjaoming) - Fail gracefully if pandoc is missing
-* [Ross Crawford-d'Heureuse](https://github.com/rosscdh) - Encode input in UTF-8 and add Django
-  example
-* [Michael Chow](https://github.com/machow) - Decode output in UTF-8
-* [Janusz Skonieczny](https://github.com/wooyek) - Support Windows newlines and allow encoding to
-  be specified.
-* [gabeos](https://github.com/gabeos) - Fix help parsing
-* [Marc Abramowitz](https://github.com/msabramo) - Make `setup.py` fail hard if pandoc is
-  missing, Travis, Dockerfile, PyPI badge, Tox, PEP-8, improved documentation
-* [Daniel L.](https://github.com/mcktrtl) - Add `extra_args` example to README
-* [Amy Guy](https://github.com/rhiaro) - Exception handling for unicode errors
-* [Florian Eßer](https://github.com/flesser) - Allow Markdown extensions in output format
-* [Philipp Wendler](https://github.com/PhilippWendler) - Allow Markdown extensions in input format
-* [Jan Katins](https://github.com/jankatins) - Handling output to a file, Travis to work on newer version of pandoc, return code checking, get_pandoc_version. Helped to fix the Travis build, new `convert_*` API. Former maintainer of pypandoc
-* [Aaron Gonzales](https://github.com/xysmas) - Added better filter handling
-* [David Lukes](https://github.com/dlukes) - Enabled input from non-plain-text files and made sure tests clean up template files correctly if they fail
-* [valholl](https://github.com/valholl) - Set up licensing information correctly and include examples to distribution version
-* [Cyrille Rossant](https://github.com/rossant) - Fixed bug by trimming out stars in the list of pandoc formats. Helped to fix the Travis build.
-* [Paul Osborne](https://github.com/posborne) - Don't require pandoc to install pypandoc.
-* [Felix Yan](https://github.com/felixonmars) - Added installation instructions for Arch Linux.
-* [Kolen Cheung](https://github.com/ickc) - Implement `_get_pandoc_urls` for installing arbitrary version as well as the latest version of pandoc. Minor: README, Travis, setup.py.
-* [Rebecca Heineman](https://github.com/burgerbecky) - Added scanning code for finding pandoc in Windows
-* [Andrew Barraford](https://github.com/abarrafo) - Download destination.
-* [Jesse Widner](https://github.com/jwidner) & [Dominic Thorn](https://github.com/domvwt) - Add support for lua filters
-* [Alex Kneisel](https://github.com/hey-thanks/) - Added pathlib.Path support to convert_file.
-* [Juho Vepsäläinen](https://github.com/bebraw/) - Creator and former maintainer of pypandoc
-* [Connor](https://github.com/DisSupEng/) - Updated Dockerfile to Python 3.9 image and added docker compose file
-* [Colin Bull](https://github.com/colinbull) - Added ability to control whether files are sorted before being passed to pandoc process.
+- **I want to use a bigger and/or different model in the RL swarm, can I do that?**: Yes - but we only recommend doing so if you are comfortable understanding what size model can reasonably run on your hardware.  If you elect to bring a custom model, just paste the repo/model name into the command line when prompted.
 
-## License
+- **I am running a model in the swarm on my CPU, have received a python `RuntimeError`, and my training progress seems to have stopped.**: There are several possible causes for this, but before trying anything please wait long enough to be sure your training actually is frozen and not just slow (e.g., wait longer than a single training iteration has previously taken on your machine). If you're sure training is actually frozen, then some things to try are:
+    - Set this (experimental) fix: `export PYTORCH_MPS_HIGH_WATERMARK_RATIO=0.0 && ./run_rl_swarm.sh`
 
-Pypandoc is available under MIT license. See LICENSE for more details. Pandoc itself is [available under the GPL2 license](https://github.com/jgm/pandoc/blob/master/COPYING.md).

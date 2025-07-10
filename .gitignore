@@ -1,18 +1,32 @@
-|.egg-info
-*.swp
-*.pyc
+.venv
+**/__pycache__/
+.DS_Store
+
+.env
+.next/
+temp-data/
+swarm.pem
+logs/
+runs/
+model_output_samples/
+grpo_trainer_lora_model/
+unsloth_compiled_cache/
+
+node_modules/
+web/ui/dist/
+
+/bazel-*
+/external
+/tmp
+
 dist/
-pypandoc.egg-info/
-.tox/
+MODULE.bazel.lock
+**/.direnv
+.tmux.conf
 
-## IDEs
-# pycharm
-.idea/
+user/
 
-# downloaded pandoc packages
-pandoc-*.msi
-pandoc-*.deb
-pandoc-*.pkg
-# The downloaded files end up here
-pypandoc/files/
-build/
+configs/
+genrl-swarm/
+
+result
